@@ -42,13 +42,9 @@ public class AdvancedFakeChestInventory extends AdvancedChestInventory {
         ((FakeEntity) this.getHolder()).setInventory(this);
     }
 
-    protected UpdateBlockPacket getDefaultPack(Player player, int id, BlockVector3 pos) {
+    protected UpdateBlockPacket getDefaultPack(int id, BlockVector3 pos) {
         UpdateBlockPacket updateBlock = new UpdateBlockPacket();
-        if (USE_GAME_VERSION) {
-            updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(player.getGameVersion(), id, 0);
-        } else {
-            updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(player.protocol, id, 0);
-        }
+        updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(id, 0);
         updateBlock.flags = UpdateBlockPacket.FLAG_ALL_PRIORITY;
         updateBlock.x = pos.x;
         updateBlock.y = pos.y;
@@ -93,12 +89,12 @@ public class AdvancedFakeChestInventory extends AdvancedChestInventory {
     }
 
     protected void placeFakeChest(Player who, BlockVector3 pos) {
-        who.dataPacket(this.getDefaultPack(who, BlockID.CHEST, pos));
+        who.dataPacket(this.getDefaultPack(BlockID.CHEST, pos));
         BlockEntityDataPacket blockEntityData = new BlockEntityDataPacket();
         blockEntityData.x = pos.x;
         blockEntityData.y = pos.y;
         blockEntityData.z = pos.z;
-        blockEntityData.namedTag = getNbt(pos, this.getName());
+        blockEntityData.namedTag = getNbt(pos, this.getTitle());
 
         who.dataPacket(blockEntityData);
     }
@@ -109,7 +105,7 @@ public class AdvancedFakeChestInventory extends AdvancedChestInventory {
                 .putInt("x", pos.x)
                 .putInt("y", pos.y)
                 .putInt("z", pos.z)
-                .putString("CustomName", name == null ? "Chest" : name);
+                .putString("CustomName", name == null || name.isEmpty() ? "Chest" : name);
 
         try {
             return NBTIO.write(tag, ByteOrder.LITTLE_ENDIAN, true);
@@ -132,11 +128,7 @@ public class AdvancedFakeChestInventory extends AdvancedChestInventory {
                         public void onRun() {
                             Vector3 blockPosition = blocks.get(index).asVector3();
                             UpdateBlockPacket updateBlock = new UpdateBlockPacket();
-                            if (USE_GAME_VERSION) {
-                                updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(who.getGameVersion(), who.getLevel().getBlock(blockPosition).getFullId());
-                            } else {
-                                updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(who.protocol, who.getLevel().getBlock(blockPosition).getFullId());
-                            }
+                            updateBlock.blockRuntimeId = GlobalBlockPalette.getOrCreateRuntimeId(who.getLevel().getBlock(blockPosition).getFullId());
                             updateBlock.flags = UpdateBlockPacket.FLAG_ALL_PRIORITY;
                             updateBlock.x = blockPosition.getFloorX();
                             updateBlock.y = blockPosition.getFloorY();
